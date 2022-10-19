@@ -13,7 +13,6 @@ export class App extends Component {
     page: 1,
     query: '',
     isLoading: false,
-    showButton: false,
     showModal: false,
     currentModalElement: null,
   }
@@ -24,19 +23,18 @@ export class App extends Component {
       this.setState({ isLoading: true });
       try {
         const images = await getImages(this.state.query, this.state.page);
-        this.setState({images: images.hits})
+        this.setState({ images: images.hits })
       } catch (error) {
         console.log(error);
       }
       finally {
         this.setState({ isLoading: false });
-        this.setState({ showButton: true });
-      }
+      }      
     }
 
     if (this.state.query !== prevState.query) {
       this.setState({ page: 1 });
-    }
+    } 
   }
 
   currentPage = () => {
@@ -66,6 +64,7 @@ export class App extends Component {
   }
 
   render() {
+    const isImages = this.state.images.length > 0;
     return (
       <>
         <Searchbar onSubmit={this.handleSubmit} />
@@ -73,7 +72,7 @@ export class App extends Component {
         <ImageGallery
           images={this.state.images}
           handleClickModal={this.handleClickModal}/>
-        {this.state.showButton && <Button onClick={this.currentPage} />}
+        {isImages && <Button onClick={this.currentPage} />}
         {this.state.showModal &&
           <Modal onClose={this.toggleModal}>
             <img src={this.state.currentModalElement.largeImageURL} alt="" />

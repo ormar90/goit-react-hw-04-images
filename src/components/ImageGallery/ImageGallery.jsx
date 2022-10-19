@@ -4,7 +4,9 @@ import { ImageGalleryList } from "./ImageGallery.styled";
 export const ImageGallery = ({ images, handleClickModal }) => (
     <>        
         <ImageGalleryList>            
-            <ImageGalleryItem images={images} handleClickModal={handleClickModal}/>
+            {images.map((img) => (
+                <ImageGalleryItem key={img.id} img={img} handleClickModal={handleClickModal}/>
+            ))}
         </ImageGalleryList>
     </>
 );

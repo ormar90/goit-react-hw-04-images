@@ -1,16 +1,12 @@
 import { GalleryItem, GalleryItemImage } from "./ImageGalleryItem.styled";
 
-export const ImageGalleryItem = ({ images, handleClickModal }) => {
+export const ImageGalleryItem = ({ img, handleClickModal }) => {
 
     return (
         <>
-            {
-                images.map((img) => (
-                    <GalleryItem key={img.id} onClick={handleClickModal}>
-                        <GalleryItemImage src={img.webformatURL} alt={img.tags} />
-                    </GalleryItem>
-                ))
-            }
+            <GalleryItem onClick={handleClickModal}>
+                <GalleryItemImage src={img.webformatURL} alt={img.tags} />
+            </GalleryItem>
         </>
     );
 } 
