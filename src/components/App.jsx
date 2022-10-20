@@ -11,19 +11,21 @@ export class App extends Component {
   state = {
     images: [],
     page: 1,
+    maxPage: 1,
     query: '',
     isLoading: false,
     showModal: false,
     currentModalElement: null,
+
   }
 
   async componentDidUpdate(_, prevState) {
     if (this.state.query !== prevState.query || this.state.page !== prevState.page) {
-      this.setState({ showButton: false });
       this.setState({ isLoading: true });
       try {
         const images = await getImages(this.state.query, this.state.page);
-        this.setState({ images: images.hits })
+        this.setState((prevState) => ({ images: [...prevState.images, ...images.hits] }));
+        this.setState({maxPage: Math.ceil(images.total/12)})
       } catch (error) {
         console.log(error);
       }
@@ -44,7 +46,14 @@ export class App extends Component {
   }
 
   handleSubmit = (values) => {
-    this.setState({ query: values.value });
+    if (this.state.query === values.value) {
+      return;
+    }
+    this.setState({
+      query: values.value,
+      page: 1,
+      images: [],
+    });
   }
 
   handleClickModal = (e) => {
@@ -72,7 +81,7 @@ export class App extends Component {
         <ImageGallery
           images={this.state.images}
           handleClickModal={this.handleClickModal}/>
-        {isImages && <Button onClick={this.currentPage} />}
+        {isImages && (this.state.page < this.state.maxPage) && <Button onClick={this.currentPage} />}
         {this.state.showModal &&
           <Modal onClose={this.toggleModal}>
             <img src={this.state.currentModalElement.largeImageURL} alt="" />
