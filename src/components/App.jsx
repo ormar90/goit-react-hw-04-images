@@ -1,92 +1,92 @@
-import { Component } from "react";
-import { ImageGallery } from "./ImageGallery/ImageGallery";
-import { Searchbar } from "./Searchbar/Searchbar";
-import { Loader } from "./Loader/Loader";
-import { Modal } from "./Modal/Modal";
-import { getImages } from "../services/api";
-import { Button } from "./Button/Button";
+import { useState, useEffect } from 'react';
+import { ImageGallery } from './ImageGallery/ImageGallery';
+import { Searchbar } from './Searchbar/Searchbar';
+import { Loader } from './Loader/Loader';
+import { Modal } from './Modal/Modal';
+import { getImages } from '../services/api';
+import { Button } from './Button/Button';
 
-export class App extends Component {
+export const App = () => {
+  const [images, setImages] = useState([]);
+  const [page, setPage] = useState(1);
+  const [query, setQuery] = useState('');
+  const [maxPage, setMaxPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const [currentModalElement, setCurrentModalElement] =
+    useState(null);
+  const [showModal, setShowModal] = useState(false);
 
-  state = {
-    images: [],
-    page: 1,
-    maxPage: 1,
-    query: '',
-    isLoading: false,
-    showModal: false,
-    currentModalElement: null,
+  const isImages = images.length > 0;
 
-  }
-
-  async componentDidUpdate(_, prevState) {
-    if (this.state.query !== prevState.query || this.state.page !== prevState.page) {
-      this.setState({ isLoading: true });
+  useEffect(() => {
+    if (query) {
       try {
-        const images = await getImages(this.state.query, this.state.page);
-        this.setState((prevState) => ({ images: [...prevState.images, ...images.hits] }));
-        this.setState({maxPage: Math.ceil(images.total/12)})
+        const fetchApi = async () => {
+          setIsLoading(true);
+          const images = await getImages(query, page);
+          // console.log(images);
+          setImages(prevState => [
+            ...prevState,
+            ...images.hits,
+          ]);
+          setIsLoading(false);
+          setMaxPage(Math.ceil(images.total / 12));
+        };
+        fetchApi();
       } catch (error) {
         console.log(error);
+      } finally {
       }
-      finally {
-        this.setState({ isLoading: false });
-      }      
     }
+  }, [page, query]);
 
-    if (this.state.query !== prevState.query) {
-      this.setState({ page: 1 });
-    } 
-  }
+  const currentPage = () => {
+    setPage(prevState => prevState + 1);
+  };
 
-  currentPage = () => {
-    this.setState((prevState) => ({
-      page: prevState.page + 1,
-    }));
-  }
-
-  handleSubmit = (values) => {
-    if (this.state.query === values.value) {
+  const handleSubmit = values => {
+    if (query === values.value) {
       return;
     }
-    this.setState({
-      query: values.value,
-      page: 1,
-      images: [],
-    });
-  }
 
-  handleClickModal = (e) => {
-    const currentElement = this.state.images.find(image => {
+    setQuery(values.value);
+    setPage(1);
+    setImages([]);
+  };
+
+  const handleClickModal = e => {
+    const currentElement = images.find(image => {
       return image.webformatURL === e.target.currentSrc;
-    })
+    });
     console.log(currentElement.largeImageURL);
-    this.setState({ currentModalElement: currentElement })
+    setCurrentModalElement(currentElement);
 
-    this.toggleModal();
-  }
+    toggleModal();
+  };
 
-  toggleModal = () => {
-    this.setState((prevState) => ({
-      showModal: !prevState.showModal
-    }))
-  }
+  const toggleModal = () => {
+    setShowModal(prevState => !prevState.showModal);
+  };
 
-  render() {
-    const isImages = this.state.images.length > 0;
-    return (
-      <>
-        <Searchbar onSubmit={this.handleSubmit} />
-        <Loader isLoading={this.state.isLoading }/>
-        <ImageGallery
-          images={this.state.images}
-          handleClickModal={this.handleClickModal}/>
-        {isImages && (this.state.page < this.state.maxPage) && <Button onClick={this.currentPage} />}
-        {this.state.showModal &&
-          <Modal onClose={this.toggleModal}>
-            <img src={this.state.currentModalElement.largeImageURL} alt="" />
-          </Modal>}
-      </>
-    )
-  }
-}
+  return (
+    <>
+      <Searchbar onSubmit={handleSubmit} />
+      <Loader isLoading={isLoading} />
+      <ImageGallery
+        images={images}
+        handleClickModal={handleClickModal}
+      />
+      {isImages && page < maxPage && (
+        <Button onClick={currentPage} />
+      )}
+      {showModal && (
+        <Modal onClose={toggleModal}>
+          <img
+            src={currentModalElement.largeImageURL}
+            alt=""
+          />
+        </Modal>
+      )}
+    </>
+  );
+};
