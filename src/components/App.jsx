@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import { ImageGallery } from './ImageGallery/ImageGallery';
 import { Searchbar } from './Searchbar/Searchbar';
 import { Loader } from './Loader/Loader';
@@ -14,11 +16,12 @@ export const App = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [currentModalElement, setCurrentModalElement] =
     useState(null);
-  const [showModal, setShowModal] = useState(false);
+  const [isShowModal, setIsShowModal] = useState(false);
 
   const isImages = images.length > 0;
 
   useEffect(() => {
+    
     if (query) {
       try {
         const fetchApi = async () => {
@@ -31,6 +34,11 @@ export const App = () => {
           ]);
           setIsLoading(false);
           setMaxPage(Math.ceil(images.total / 12));
+          if (images.hits.length === 0) {
+            toast.error('Sorry! Nothing found your request.', {
+              autoClose: 2000,
+            });
+          }
         };
         fetchApi();
       } catch (error) {
@@ -45,6 +53,11 @@ export const App = () => {
   };
 
   const handleSubmit = values => {
+    if (values.value.trim() === '') {
+      toast.error('Please! Enter your search request.', {
+        autoClose: 2000,
+      });
+    }
     if (query === values.value) {
       return;
     }
@@ -65,26 +78,19 @@ export const App = () => {
   };
 
   const toggleModal = () => {
-    setShowModal(prevState => !prevState.showModal);
+    setIsShowModal(prevState => !prevState);
   };
 
   return (
     <>
       <Searchbar onSubmit={handleSubmit} />
       <Loader isLoading={isLoading} />
-      <ImageGallery
-        images={images}
-        handleClickModal={handleClickModal}
-      />
-      {isImages && page < maxPage && (
-        <Button onClick={currentPage} />
-      )}
-      {showModal && (
+      <ToastContainer />
+      <ImageGallery images={images} handleClickModal={handleClickModal} />
+      {isImages && page < maxPage && <Button onClick={currentPage} />}
+      {isShowModal && (
         <Modal onClose={toggleModal}>
-          <img
-            src={currentModalElement.largeImageURL}
-            alt=""
-          />
+          <img src={currentModalElement.largeImageURL} alt="" />
         </Modal>
       )}
     </>
